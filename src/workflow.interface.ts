@@ -14,10 +14,6 @@ export interface Workflow {
   edges: Edge[];
 }
 
-export interface NodesById {
-  [key: string]: Node;
-}
-
 export interface EdgesByFrom {
   [key: string]: Edge[];
 }

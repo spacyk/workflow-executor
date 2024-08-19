@@ -9,6 +9,10 @@ export class Queue<T> {
     return this.items.shift();
   }
 
+  has(item: T): boolean {
+    return this.items.includes(item);
+  }
+
   peek(): T | undefined {
     return this.items[0];
   }
