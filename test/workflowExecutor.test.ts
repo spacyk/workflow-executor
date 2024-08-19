@@ -47,19 +47,20 @@ describe('WorkflowExecutor.getStartingNode', () => {
 
 describe('WorkflowExecutor.execute', () => {
   it('test execute with $next path specified, [A, C, E]', () => {
+    const mockFunction = jest.fn();
     const workflow: Workflow = {
       nodes: [
         {
           id: 'A',
           execute: () => {
-            console.log('A');
+            mockFunction('A');
             return { $next: 'false' };
           },
         },
-        { id: 'B', execute: () => console.log('B') },
-        { id: 'C', execute: () => console.log('C') },
-        { id: 'D', execute: () => console.log('D') },
-        { id: 'E', execute: () => console.log('E') },
+        { id: 'B', execute: () => mockFunction('B') },
+        { id: 'C', execute: () => mockFunction('C') },
+        { id: 'D', execute: () => mockFunction('D') },
+        { id: 'E', execute: () => mockFunction('E') },
       ],
       edges: [
         { name: 'true', from: 'A', to: 'B' },
@@ -69,22 +70,20 @@ describe('WorkflowExecutor.execute', () => {
         { from: 'C', to: 'E' },
       ],
     };
-    const consoleLogMock = jest.spyOn(console, 'log');
 
     const workflowExecutor = new WorkflowExecutor(workflow);
     workflowExecutor.execute();
-    expect(consoleLogMock.mock.calls).toEqual([['A'], ['C'], ['E']]);
-
-    consoleLogMock.mockRestore();
+    expect(mockFunction.mock.calls).toEqual([['A'], ['C'], ['E']]);
   });
 
   it('test execute with multiple valid edges for one node, [A, B, C, D]', () => {
+    const mockFunction = jest.fn();
     const workflow: Workflow = {
       nodes: [
-        { id: 'A', execute: () => console.log('A') },
-        { id: 'B', execute: () => console.log('B') },
-        { id: 'C', execute: () => console.log('C') },
-        { id: 'D', execute: () => console.log('D') },
+        { id: 'A', execute: () => mockFunction('A') },
+        { id: 'B', execute: () => mockFunction('B') },
+        { id: 'C', execute: () => mockFunction('C') },
+        { id: 'D', execute: () => mockFunction('D') },
       ],
       edges: [
         { from: 'A', to: 'B' },
@@ -93,22 +92,20 @@ describe('WorkflowExecutor.execute', () => {
         { from: 'C', to: 'D' },
       ],
     };
-    const consoleLogMock = jest.spyOn(console, 'log');
 
     const workflowExecutor = new WorkflowExecutor(workflow);
     workflowExecutor.execute();
-    expect(consoleLogMock.mock.calls).toEqual([['A'], ['B'], ['C'], ['D']]);
-
-    consoleLogMock.mockRestore();
+    expect(mockFunction.mock.calls).toEqual([['A'], ['B'], ['C'], ['D']]);
   });
 
-  it("test execute, cycle won't be executed [A, B, C, D]", () => {
+  it('workflow with cycle. Cycle nodes not executed by default [A, B, C, D]', () => {
+    const mockFunction = jest.fn();
     const workflow: Workflow = {
       nodes: [
-        { id: 'A', execute: () => console.log('A') },
-        { id: 'B', execute: () => console.log('B') },
-        { id: 'C', execute: () => console.log('C') },
-        { id: 'D', execute: () => console.log('D') },
+        { id: 'A', execute: () => mockFunction('A') },
+        { id: 'B', execute: () => mockFunction('B') },
+        { id: 'C', execute: () => mockFunction('C') },
+        { id: 'D', execute: () => mockFunction('D') },
       ],
       edges: [
         { from: 'A', to: 'B' },
@@ -117,12 +114,69 @@ describe('WorkflowExecutor.execute', () => {
         { from: 'D', to: 'C' },
       ],
     };
-    const consoleLogMock = jest.spyOn(console, 'log');
 
     const workflowExecutor = new WorkflowExecutor(workflow);
     workflowExecutor.execute();
-    expect(consoleLogMock.mock.calls).toEqual([['A'], ['B'], ['C'], ['D']]);
+    expect(mockFunction.mock.calls).toEqual([['A'], ['B'], ['C'], ['D']]);
+  });
 
-    consoleLogMock.mockRestore();
+  it('workflow with cycle. Allow 1 cycle [A, B, C, D, C, D]', () => {
+    const mockFunction = jest.fn();
+    const workflow: Workflow = {
+      nodes: [
+        { id: 'A', execute: () => mockFunction('A') },
+        { id: 'B', execute: () => mockFunction('B') },
+        { id: 'C', execute: () => mockFunction('C') },
+        { id: 'D', execute: () => mockFunction('D') },
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C' },
+        { from: 'C', to: 'D' },
+        { from: 'D', to: 'C' },
+      ],
+    };
+
+    const workflowExecutor = new WorkflowExecutor(workflow, 1);
+    workflowExecutor.execute();
+    expect(mockFunction.mock.calls).toEqual([
+      ['A'],
+      ['B'],
+      ['C'],
+      ['D'],
+      ['C'],
+      ['D'],
+    ]);
+  });
+
+  it('workflow with cycle. Allow 2 cycles [A, B, C, D, C, D, C, D]', () => {
+    const mockFunction = jest.fn();
+    const workflow: Workflow = {
+      nodes: [
+        { id: 'A', execute: () => mockFunction('A') },
+        { id: 'B', execute: () => mockFunction('B') },
+        { id: 'C', execute: () => mockFunction('C') },
+        { id: 'D', execute: () => mockFunction('D') },
+      ],
+      edges: [
+        { from: 'A', to: 'B' },
+        { from: 'B', to: 'C' },
+        { from: 'C', to: 'D' },
+        { from: 'D', to: 'C' },
+      ],
+    };
+
+    const workflowExecutor = new WorkflowExecutor(workflow, 2);
+    workflowExecutor.execute();
+    expect(mockFunction.mock.calls).toEqual([
+      ['A'],
+      ['B'],
+      ['C'],
+      ['D'],
+      ['C'],
+      ['D'],
+      ['C'],
+      ['D'],
+    ]);
   });
 });

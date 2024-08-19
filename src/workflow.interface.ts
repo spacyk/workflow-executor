@@ -1,6 +1,7 @@
 export interface Node {
   id: string;
   execute: () => { $next: string } | void; // `$next` is the name of the next edge to follow
+  executionCount?: number;
 }
 
 export interface Edge {

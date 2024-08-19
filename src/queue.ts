@@ -13,15 +13,7 @@ export class Queue<T> {
     return this.items.includes(item);
   }
 
-  peek(): T | undefined {
-    return this.items[0];
-  }
-
   isEmpty(): boolean {
     return this.items.length === 0;
-  }
-
-  size(): number {
-    return this.items.length;
   }
 }

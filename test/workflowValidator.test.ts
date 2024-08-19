@@ -8,16 +8,16 @@ describe('WorkflowValidator.validate', () => {
     },
     {
       nodes: [
-        { id: 'A', execute: () => console.log('A') },
-        { id: 'B', execute: () => console.log('B') },
+        { id: 'A', execute: () => {} },
+        { id: 'B', execute: () => {} },
       ],
       edges: [],
     },
     {
       nodes: [
-        { id: 'A', execute: () => console.log('A') },
-        { id: 'B', execute: () => console.log('B') },
-        { id: 'C', execute: () => console.log('C') },
+        { id: 'A', execute: () => {} },
+        { id: 'B', execute: () => {} },
+        { id: 'C', execute: () => {} },
       ],
       edges: [{ from: 'A', to: 'B' }],
     },
@@ -32,13 +32,13 @@ describe('WorkflowValidator.validate', () => {
 
   it.each([
     {
-      nodes: [{ id: 'A', execute: () => console.log('A') }],
+      nodes: [{ id: 'A', execute: () => {} }],
       edges: [],
     },
     {
       nodes: [
-        { id: 'A', execute: () => console.log('A') },
-        { id: 'B', execute: () => console.log('B') },
+        { id: 'A', execute: () => {} },
+        { id: 'B', execute: () => {} },
       ],
       edges: [{ from: 'A', to: 'B' }],
     },

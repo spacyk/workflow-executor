@@ -6,17 +6,24 @@ import { WorkflowGraph } from './workflowGraph';
 export class WorkflowExecutor {
   edges: Edge[];
   nodes: Node[];
+  numberOfCyclesAllowed: number;
   graph: WorkflowGraph;
   nodesQueue: Queue<Node>;
-  executedNodes: Set<Node>;
 
-  constructor(workflow: Workflow) {
+  /**
+   * workflowExecutor constructor.
+   *
+   * @param workflow - Workflow to be executed
+   * @param numberOfCyclesAllowed - Number of cyclic node executions we want to allow
+   * in case the Workflow contains cycles
+   */
+  constructor(workflow: Workflow, numberOfCyclesAllowed: number = 0) {
     WorkflowValidator.validate(workflow);
     this.edges = workflow.edges;
     this.nodes = workflow.nodes;
-    this.graph = new WorkflowGraph(workflow);
+    this.numberOfCyclesAllowed = numberOfCyclesAllowed;
+    this.graph = new WorkflowGraph(workflow.edges);
     this.nodesQueue = new Queue<Node>();
-    this.executedNodes = new Set<Node>();
   }
 
   nodeById(id: string): Node | undefined {
@@ -34,7 +41,7 @@ export class WorkflowExecutor {
   }
 
   private executeNode(node: Node) {
-    this.executedNodes.add(node);
+    node.executionCount = (node.executionCount || 0) + 1;
     const result = node.execute();
     const allowedEdgeName = result?.$next;
 
@@ -44,10 +51,26 @@ export class WorkflowExecutor {
 
       // Conditional node, the edge is not allowed and shouldn't be followed
       if (allowedEdgeName && allowedEdgeName !== nextEdge?.name) return;
-      // Node is already queued
-      if (this.nodesQueue.has(nextNode)) return;
+
+      const maxAllowedExecutions: number = this.graph.cyclicNodesIds.includes(
+        nextNode.id,
+      )
+        ? 1 + this.numberOfCyclesAllowed
+        : 1;
+
       // Node was already executed (we don't support double execution)
-      if (this.executedNodes.has(nextNode)) return;
+      if (
+        nextNode.executionCount &&
+        nextNode.executionCount >= maxAllowedExecutions
+      )
+        return;
+      // Node is already queued
+      if (
+        this.nodesQueue.has(nextNode) &&
+        nextNode.executionCount &&
+        nextNode.executionCount >= maxAllowedExecutions - 1
+      )
+        return;
 
       this.enqueueNode(nextNode);
     });
