@@ -1,19 +1,25 @@
-export interface Node {
-  id: string;
-  execute: () => { $next: string } | void; // `$next` is the name of the next edge to follow
-}
-
-export interface Edge {
-  name?: string;
+export interface Edge<EdgeId extends string = string> {
   from: string;
+  id?: EdgeId;
   to: string;
 }
 
-export interface Workflow {
-  nodes: Node[];
-  edges: Edge[];
+export interface Node<EdgeId extends string = string> {
+  execute: () => { $next: EdgeId } | void;
+  id: string;
 }
 
-export interface EdgesByFrom {
-  [key: string]: Edge[];
+export interface Workflow<EdgeId extends string = string> {
+  edges: Edge<EdgeId>[];
+  nodes: Node<EdgeId>[];
+}
+
+export const defineWorkflow = <EdgeId extends string>(
+  workflow: Workflow<EdgeId>,
+): Workflow<EdgeId> => {
+  return workflow;
+};
+
+export interface EdgesByFrom<EdgeId extends string = string> {
+  [key: string]: Edge<EdgeId>[];
 }

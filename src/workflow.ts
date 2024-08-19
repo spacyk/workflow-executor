@@ -1,20 +1,22 @@
 import { Edge, EdgesByFrom, Workflow, Node } from './workflow.interface';
 import { Queue } from './queue';
 
-export class WorkflowExecutor {
-  workflow: Workflow;
-  edges: EdgesByFrom;
+export class WorkflowExecutor<EdgeId extends string> {
+  workflow: Workflow<EdgeId>;
+  edges: EdgesByFrom<EdgeId>;
   nodesQueue: Queue<Node>;
   executedNodes: Set<Node>;
 
-  constructor(workflow: Workflow) {
+  constructor(workflow: Workflow<EdgeId>) {
     this.workflow = workflow;
-    this.edges = WorkflowExecutor.createEdgesByFrom(workflow.edges);
+    this.edges = WorkflowExecutor.createEdgesByFrom(
+      workflow.edges,
+    ) as EdgesByFrom<EdgeId>;
     this.nodesQueue = new Queue<Node>();
     this.executedNodes = new Set<Node>();
   }
 
-  nodeById(id: string): Node | undefined {
+  nodeById(id: EdgeId): Node | undefined {
     return this.workflow.nodes.find((node) => node.id === id);
   }
 
@@ -42,10 +44,10 @@ export class WorkflowExecutor {
 
     const nextEdges = this.edges[node.id];
     nextEdges?.forEach((nextEdge) => {
-      const nextNode = this.nodeById(nextEdge.to)!;
+      const nextNode = this.nodeById(nextEdge.to as EdgeId)!;
 
       // Conditional node, the edge is not allowed and shouldn't be followed
-      if (allowedEdgeName && allowedEdgeName !== nextEdge?.name) return;
+      if (allowedEdgeName && allowedEdgeName !== nextEdge?.id) return;
       // Node is already queued
       if (this.nodesQueue.has(nextNode)) return;
       // Node was already executed (we don't support double execution)

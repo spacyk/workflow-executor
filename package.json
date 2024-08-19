@@ -7,6 +7,7 @@
     "format": "prettier --write \"{src,test}/**/*.ts\"",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "jest",
+    "type-check": "tsc --noEmit",
     "workflow": "ts-node ./src/app.ts"
   },
   "keywords": [],
