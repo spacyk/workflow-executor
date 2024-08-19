@@ -1,34 +1,32 @@
-import { Edge, EdgesByFrom, Workflow, Node } from './workflow.interface';
+import { Workflow, Node, Edge } from './workflow.interface';
 import { Queue } from './queue';
+import { WorkflowValidator } from './workflowValidator';
+import { WorkflowGraph } from './workflowGraph';
 
 export class WorkflowExecutor {
-  workflow: Workflow;
-  edges: EdgesByFrom;
+  edges: Edge[];
+  nodes: Node[];
+  graph: WorkflowGraph;
   nodesQueue: Queue<Node>;
   executedNodes: Set<Node>;
 
   constructor(workflow: Workflow) {
-    this.workflow = workflow;
-    this.edges = WorkflowExecutor.createEdgesByFrom(workflow.edges);
+    WorkflowValidator.validate(workflow);
+    this.edges = workflow.edges;
+    this.nodes = workflow.nodes;
+    this.graph = new WorkflowGraph(workflow);
     this.nodesQueue = new Queue<Node>();
     this.executedNodes = new Set<Node>();
   }
 
   nodeById(id: string): Node | undefined {
-    return this.workflow.nodes.find((node) => node.id === id);
+    return this.nodes.find((node) => node.id === id);
   }
 
-  static createEdgesByFrom(edges: Edge[]): EdgesByFrom {
-    const edgesByFrom: EdgesByFrom = {};
-    edges.forEach((edge) => {
-      const from = edge.from;
-      if (from in edgesByFrom) {
-        edgesByFrom[from]?.push(edge);
-      } else {
-        edgesByFrom[from] = [edge];
-      }
-    });
-    return edgesByFrom;
+  getStartingNode(): Node {
+    const connectedNodes = new Set<string>();
+    this.edges.forEach((edge) => connectedNodes.add(edge.to));
+    return this.nodes.filter((node) => !connectedNodes.has(node.id))[0]!;
   }
 
   private enqueueNode(node: Node) {
@@ -40,7 +38,7 @@ export class WorkflowExecutor {
     const result = node.execute();
     const allowedEdgeName = result?.$next;
 
-    const nextEdges = this.edges[node.id];
+    const nextEdges = this.graph.edges[node.id];
     nextEdges?.forEach((nextEdge) => {
       const nextNode = this.nodeById(nextEdge.to)!;
 
@@ -56,8 +54,7 @@ export class WorkflowExecutor {
   }
 
   public execute() {
-    const startingNode = this.workflow.nodes[0];
-    if (startingNode === undefined) return;
+    const startingNode = this.getStartingNode();
     this.enqueueNode(startingNode);
 
     while (!this.nodesQueue.isEmpty()) {
