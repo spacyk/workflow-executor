@@ -45,17 +45,26 @@ export class WorkflowExecutor {
     this.nodesQueue.enqueue(node);
   }
 
+  /**
+   * Checks whether we can enqueue the provided node for execution.
+   * We allow multiple executions for nodes that are part of the cycle.
+   *
+   * @remarks
+   * Don't allow to enqueue if:
+   *  - node execution has exceeded the max number of times
+   *  - node is already queued and with that it has exceeded the max number
+   *
+   * @param node - The node we want to verify
+   * @returns boolean
+   */
   isNodeAllowedToEnqueue(node: Node): boolean {
-    // Max allowed node executions if cycles are present and enabled
     const maxAllowedExecutions: number = this.graph.cyclicNodesIds.includes(
       node.id,
     )
       ? 1 + this.numberOfCyclesAllowed
       : 1;
 
-    // Node was already executed max amount of times
     if (node.executionCount! >= maxAllowedExecutions) return false;
-    // Node is already queued and was executed max amount of times
     if (
       this.nodesQueue.has(node) &&
       node.executionCount! >= maxAllowedExecutions - 1
@@ -73,7 +82,7 @@ export class WorkflowExecutor {
     nextEdges?.forEach((nextEdge) => {
       const nextNode = this.nodeById(nextEdge.to)!;
 
-      // Conditional node, the edge is not allowed and shouldn't be followed
+      /* Conditional node, the edge is not allowed and won't be followed */
       if (allowedEdgeName && allowedEdgeName !== nextEdge?.name) return;
 
       if (this.isNodeAllowedToEnqueue(nextNode)) {

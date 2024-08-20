@@ -36,7 +36,7 @@ export class WorkflowGraph {
   }
 
   /**
-   * Flattens the structure to get the list of cyclic IDs.
+   * Flattens the structure to get the list of cyclic node IDs.
    *
    * @param graph
    * @returns The list of nodes (IDs) that are part of the cycle.
