@@ -1,18 +1,18 @@
-export interface Node {
-  id: string;
+export interface Node<NodeId extends string = string> {
+  id: NodeId;
   execute: () => { $next: string } | void; // `$next` is the name of the next edge to follow
   executionCount?: number;
 }
 
-export interface Edge {
+export interface Edge<NodeId extends string = string> {
   name?: string;
-  from: string;
-  to: string;
+  from: NodeId;
+  to: NodeId;
 }
 
-export interface Workflow {
-  nodes: Node[];
-  edges: Edge[];
+export interface Workflow<NodeId extends string = string> {
+  nodes: Node<NodeId>[];
+  edges: Edge<NodeId>[];
 }
 
 export interface EdgesByFrom {

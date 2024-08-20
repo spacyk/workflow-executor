@@ -33,6 +33,6 @@ const workflow: Workflow = {
     { from: 'G', to: 'D' },
   ],
 };
-//
+
 const workflowExecutor = new WorkflowExecutor(workflow, 1);
 workflowExecutor.execute();

@@ -3,12 +3,12 @@ import { Queue } from './queue';
 import { WorkflowValidator } from './workflowValidator';
 import { WorkflowGraph } from './workflowGraph';
 
-export class WorkflowExecutor {
-  edges: Edge[];
-  nodes: Node[];
+export class WorkflowExecutor<NodeId extends string> {
+  edges: Edge<NodeId>[];
+  nodes: Node<NodeId>[];
   numberOfCyclesAllowed: number;
   graph: WorkflowGraph;
-  nodesQueue: Queue<Node>;
+  nodesQueue: Queue<Node<NodeId>>;
 
   /**
    * workflowExecutor constructor.
@@ -21,26 +21,26 @@ export class WorkflowExecutor {
    * @param numberOfCyclesAllowed - Number of cyclic node executions we want to allow
    * in case the Workflow contains cycles
    */
-  constructor(workflow: Workflow, numberOfCyclesAllowed: number = 0) {
+  constructor(workflow: Workflow<NodeId>, numberOfCyclesAllowed: number = 0) {
     WorkflowValidator.validate(workflow);
     this.edges = workflow.edges;
     this.nodes = workflow.nodes;
     this.numberOfCyclesAllowed = numberOfCyclesAllowed;
     this.graph = new WorkflowGraph(workflow.edges);
-    this.nodesQueue = new Queue<Node>();
+    this.nodesQueue = new Queue<Node<NodeId>>();
   }
 
-  nodeById(id: string): Node | undefined {
+  nodeById(id: NodeId): Node<NodeId> | undefined {
     return this.nodes.find((node) => node.id === id);
   }
 
-  getStartingNode(): Node {
+  getStartingNode(): Node<NodeId> {
     const connectedNodes = new Set<string>();
     this.edges.forEach((edge) => connectedNodes.add(edge.to));
     return this.nodes.filter((node) => !connectedNodes.has(node.id))[0]!;
   }
 
-  private enqueueNode(node: Node) {
+  private enqueueNode(node: Node<NodeId>) {
     node.executionCount = node.executionCount || 0;
     this.nodesQueue.enqueue(node);
   }
@@ -57,7 +57,7 @@ export class WorkflowExecutor {
    * @param node - The node we want to verify
    * @returns boolean
    */
-  isNodeAllowedToEnqueue(node: Node): boolean {
+  isNodeAllowedToEnqueue(node: Node<NodeId>): boolean {
     const maxAllowedExecutions: number = this.graph.cyclicNodesIds.includes(
       node.id,
     )
@@ -73,14 +73,14 @@ export class WorkflowExecutor {
     return true;
   }
 
-  private executeNode(node: Node) {
+  private executeNode(node: Node<NodeId>) {
     node.executionCount = node.executionCount! + 1;
     const result = node.execute();
     const allowedEdgeName = result?.$next;
 
     const nextEdges = this.graph.edges[node.id];
     nextEdges?.forEach((nextEdge) => {
-      const nextNode = this.nodeById(nextEdge.to)!;
+      const nextNode = this.nodeById(nextEdge.to as NodeId)!;
 
       /* Conditional node, the edge is not allowed and won't be followed */
       if (allowedEdgeName && allowedEdgeName !== nextEdge?.name) return;
