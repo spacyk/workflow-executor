@@ -15,6 +15,6 @@ export interface Workflow<NodeId extends string = string> {
   edges: Edge<NodeId>[];
 }
 
-export interface EdgesByFrom {
+export interface AdjacentEdges {
   [key: string]: Edge[];
 }

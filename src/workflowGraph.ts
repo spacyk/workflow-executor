@@ -1,33 +1,33 @@
-import { Edge, EdgesByFrom } from './workflow.interface';
+import { AdjacentEdges, Edge } from './workflow.interface';
 import Graph from 'tarjan-graph';
 
 export class WorkflowGraph {
-  edges: EdgesByFrom;
+  adjacentEdges: AdjacentEdges;
   graph: Graph;
   cyclicNodesIds: string[];
   constructor(edges: Edge[]) {
-    this.edges = WorkflowGraph.createEdgesByFrom(edges);
-    this.graph = WorkflowGraph.constructGraph(this.edges);
+    this.adjacentEdges = WorkflowGraph.buildAdjacentEdges(edges);
+    this.graph = WorkflowGraph.buildGraph(this.adjacentEdges);
     this.cyclicNodesIds = WorkflowGraph.getAllCyclicNodes(this.graph);
   }
 
-  static createEdgesByFrom(edges: Edge[]): EdgesByFrom {
-    const edgesByFrom: EdgesByFrom = {};
+  static buildAdjacentEdges(edges: Edge[]): AdjacentEdges {
+    const adjacentEdges: AdjacentEdges = {};
     edges.forEach((edge) => {
       const from = edge.from;
-      if (from in edgesByFrom) {
-        edgesByFrom[from]?.push(edge);
+      if (from in adjacentEdges) {
+        adjacentEdges[from]?.push(edge);
       } else {
-        edgesByFrom[from] = [edge];
+        adjacentEdges[from] = [edge];
       }
     });
-    return edgesByFrom;
+    return adjacentEdges;
   }
 
-  static constructGraph(edges: EdgesByFrom): Graph {
+  static buildGraph(adjacentEdges: AdjacentEdges): Graph {
     const graph = new Graph();
-    Object.keys(edges).forEach((key) => {
-      const connectedNodes: string[] = edges[key]!.map((edge) => {
+    Object.keys(adjacentEdges).forEach((key) => {
+      const connectedNodes: string[] = adjacentEdges[key]!.map((edge) => {
         return edge.to;
       });
       graph.add(key, connectedNodes);

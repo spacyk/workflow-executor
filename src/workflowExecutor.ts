@@ -78,12 +78,12 @@ export class WorkflowExecutor<NodeId extends string> {
     const result = node.execute();
     const allowedEdgeName = result?.$next;
 
-    const nextEdges = this.graph.edges[node.id];
-    nextEdges?.forEach((nextEdge) => {
-      const nextNode = this.nodeById(nextEdge.to as NodeId)!;
+    const adjacentEdges = this.graph.adjacentEdges[node.id];
+    adjacentEdges?.forEach((adjacentEdge) => {
+      const nextNode = this.nodeById(adjacentEdge.to as NodeId)!;
 
-      /* Conditional node, the edge is not allowed and won't be followed */
-      if (allowedEdgeName && allowedEdgeName !== nextEdge?.name) return;
+      /* Conditional edge, the edge is not allowed and won't be followed */
+      if (allowedEdgeName && allowedEdgeName !== adjacentEdge?.name) return;
 
       if (this.isNodeAllowedToEnqueue(nextNode)) {
         this.enqueueNode(nextNode);

@@ -1,6 +1,6 @@
 import { WorkflowGraph } from '../src/workflowGraph';
 
-describe('WorkflowGraph.createEdgesByFrom', () => {
+describe('WorkflowGraph.buildAdjacentEdges', () => {
   it.each([
     {
       data: [{ name: 'true', from: 'A', to: 'B' }],
@@ -32,8 +32,11 @@ describe('WorkflowGraph.createEdgesByFrom', () => {
         C: [{ from: 'C', to: 'D' }],
       },
     },
-  ])('test extracting edges for every node', ({ data, expected }) => {
-    // Execute
-    expect(WorkflowGraph.createEdgesByFrom(data)).toEqual(expected);
-  });
+  ])(
+    'test building adjacent edges structure for every node',
+    ({ data, expected }) => {
+      // Execute
+      expect(WorkflowGraph.buildAdjacentEdges(data)).toEqual(expected);
+    },
+  );
 });
