@@ -55,7 +55,7 @@ describe('WorkflowExecutor.execute', () => {
     jest.clearAllMocks();
   });
 
-  it('verify each node executes just once even with multiple valid edges.', () => {
+  it("verify each node executes just once even with multiple valid edges. don't enqueue if already queued", () => {
     const workflow: Workflow = {
       nodes: [
         { id: 'A', execute: () => mockFunction('A') },

@@ -13,6 +13,10 @@ export class WorkflowExecutor {
   /**
    * workflowExecutor constructor.
    *
+   * @remarks
+   * Valid workflow should contain only a single starting node. (Node without any receiving edges)
+   * If the workflow contains cycles, the starting node is not allowed to be part of the cycle.
+   *
    * @param workflow - Workflow to be executed
    * @param numberOfCyclesAllowed - Number of cyclic node executions we want to allow
    * in case the Workflow contains cycles
@@ -37,11 +41,31 @@ export class WorkflowExecutor {
   }
 
   private enqueueNode(node: Node) {
+    node.executionCount = node.executionCount || 0;
     this.nodesQueue.enqueue(node);
   }
 
+  isNodeAllowedToEnqueue(node: Node): boolean {
+    // Max allowed node executions if cycles are present and enabled
+    const maxAllowedExecutions: number = this.graph.cyclicNodesIds.includes(
+      node.id,
+    )
+      ? 1 + this.numberOfCyclesAllowed
+      : 1;
+
+    // Node was already executed max amount of times
+    if (node.executionCount! >= maxAllowedExecutions) return false;
+    // Node is already queued and was executed max amount of times
+    if (
+      this.nodesQueue.has(node) &&
+      node.executionCount! >= maxAllowedExecutions - 1
+    )
+      return false;
+    return true;
+  }
+
   private executeNode(node: Node) {
-    node.executionCount = (node.executionCount || 0) + 1;
+    node.executionCount = node.executionCount! + 1;
     const result = node.execute();
     const allowedEdgeName = result?.$next;
 
@@ -52,27 +76,9 @@ export class WorkflowExecutor {
       // Conditional node, the edge is not allowed and shouldn't be followed
       if (allowedEdgeName && allowedEdgeName !== nextEdge?.name) return;
 
-      const maxAllowedExecutions: number = this.graph.cyclicNodesIds.includes(
-        nextNode.id,
-      )
-        ? 1 + this.numberOfCyclesAllowed
-        : 1;
-
-      // Node was already executed (we don't support double execution)
-      if (
-        nextNode.executionCount &&
-        nextNode.executionCount >= maxAllowedExecutions
-      )
-        return;
-      // Node is already queued
-      if (
-        this.nodesQueue.has(nextNode) &&
-        nextNode.executionCount &&
-        nextNode.executionCount >= maxAllowedExecutions - 1
-      )
-        return;
-
-      this.enqueueNode(nextNode);
+      if (this.isNodeAllowedToEnqueue(nextNode)) {
+        this.enqueueNode(nextNode);
+      }
     });
   }
 
