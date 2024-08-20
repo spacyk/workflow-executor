@@ -1,4 +1,4 @@
-# workflow-executor
+# workflow-executor ⚡
 
 ### Implements Node.js function to execute a workflow defined by a graph
 
